@@ -46,4 +46,4 @@ The source code for DocuVault is available at [https://github.com/ahmedev192/doc
 3. Open your browser and navigate to `http://localhost:3000` to view the application.
 
 ## Support
-For issues or inquiries, please contact our support team at support@docuvault.com.
+For issues or inquiries, please contact us at ahmedev192@gmail.com .
