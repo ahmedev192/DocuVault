@@ -1,144 +1,159 @@
-import React, { useState } from 'react';
-import { 
-  File, FolderPlus, Tag, Users, Settings, ChevronDown, 
-  ChevronRight, Folder, PlusCircle
-} from 'lucide-react';
-import { useAppContext } from '../../context/AppContext';
-import { generateBreadcrumbs } from '../../utils/helpers';
-import { CreateFolderModal } from '../folders/CreateFolderModal';
 
-export const Sidebar: React.FC = () => {
-  const { folders, activeFolder, setActiveFolder, documents } = useAppContext();
-  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(['root']);
+import React from 'react';
+import { Folder, File, Plus, Settings, Search, Tag } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useDocumentStore } from '@/store/document-store';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-  const toggleFolder = (folderId: string) => {
-    setExpandedFolders(prev => 
-      prev.includes(folderId)
-        ? prev.filter(id => id !== folderId)
-        : [...prev, folderId]
-    );
-  };
+interface SidebarItemProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+  active?: boolean;
+  color?: string;
+  indent?: number;
+}
 
-  const renderFolderTree = (parentId: string | null, level = 0) => {
-    const subfolders = folders.filter(folder => folder.parentId === parentId);
-    
-    if (subfolders.length === 0) {
-      return null;
-    }
-    
-    return (
-      <ul className={`${level > 0 ? 'ml-4' : ''}`}>
-        {subfolders.map(folder => {
-          const hasChildren = folders.some(f => f.parentId === folder.id);
-          const isExpanded = expandedFolders.includes(folder.id);
-          const isActive = activeFolder === folder.id;
-          const documentCount = documents.filter(doc => doc.folderId === folder.id).length;
-          
-          return (
-            <li key={folder.id} className="mb-1">
-              <div 
-                className={`flex items-center py-1 px-2 rounded-md cursor-pointer ${
-                  isActive ? 'bg-teal-100 text-teal-700' : 'hover:bg-gray-100'
-                }`}
-              >
-                <button
-                  onClick={() => hasChildren && toggleFolder(folder.id)}
-                  className="mr-1 focus:outline-none"
-                >
-                  {hasChildren ? (
-                    isExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-gray-500" />
-                    )
-                  ) : (
-                    <span className="w-4"></span>
-                  )}
-                </button>
-                
-                <Folder className={`h-4 w-4 mr-2 ${isActive ? 'text-teal-600' : 'text-gray-500'}`} />
-                
-                <button
-                  onClick={() => setActiveFolder(folder.id)}
-                  className="flex-1 text-left text-sm focus:outline-none truncate"
-                >
-                  {folder.name}
-                </button>
-                
-                {documentCount > 0 && (
-                  <span className="text-xs bg-gray-200 rounded-full px-2 py-0.5 ml-2">
-                    {documentCount}
-                  </span>
-                )}
-              </div>
-              
-              {isExpanded && renderFolderTree(folder.id, level + 1)}
-            </li>
-          );
-        })}
-      </ul>
-    );
-  };
-
+const SidebarItem = ({ icon, label, onClick, active = false, color, indent = 0 }: SidebarItemProps) => {
   return (
-    <>
-      <aside className="w-64 border-r border-gray-200 bg-white h-full flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-800">DocuVault</h1>
-          <p className="text-xs text-gray-500 mt-1">Secure Document Management</p>
-        </div>
-        
-        <div className="flex flex-col justify-between flex-1 overflow-y-auto">
-          <nav className="p-4">
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Folders</h2>
-                <button 
-                  onClick={() => setIsCreateFolderOpen(true)}
-                  className="text-gray-500 hover:text-teal-600"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                </button>
-              </div>
-              {renderFolderTree(null)}
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'w-full justify-start h-9 px-3 text-sm',
+            active ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground',
+            `pl-${indent + 3}`
+          )}
+          onClick={onClick}
+          style={{ paddingLeft: `${(indent * 8) + 12}px` }}
+        >
+          <div className="flex items-center w-full">
+            <div className="mr-2">
+              {icon}
             </div>
-            
-            <div className="space-y-1">
-              <button className="flex items-center w-full py-2 px-3 rounded-md hover:bg-gray-100">
-                <Tag className="h-4 w-4 mr-3 text-gray-500" />
-                <span className="text-sm">Tags</span>
-              </button>
-              
-              <button className="flex items-center w-full py-2 px-3 rounded-md hover:bg-gray-100">
-                <Users className="h-4 w-4 mr-3 text-gray-500" />
-                <span className="text-sm">Shared with me</span>
-              </button>
-              
-              <button className="flex items-center w-full py-2 px-3 rounded-md hover:bg-gray-100">
-                <Settings className="h-4 w-4 mr-3 text-gray-500" />
-                <span className="text-sm">Settings</span>
-              </button>
-            </div>
-          </nav>
-          
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500">Storage</p>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                  <div className="bg-teal-600 h-2 rounded-full" style={{ width: '30%' }}></div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">3GB of 10GB used</p>
-              </div>
-            </div>
+            <span className="truncate">{label}</span>
+            {color && (
+              <div 
+                className="ml-auto w-3 h-3 rounded-full" 
+                style={{ backgroundColor: color }}
+              />
+            )}
           </div>
-        </div>
-      </aside>
-      
-      {isCreateFolderOpen && (
-        <CreateFolderModal onClose={() => setIsCreateFolderOpen(false)} />
-      )}
-    </>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">
+        {label}
+      </TooltipContent>
+    </Tooltip>
   );
 };
+
+const Sidebar = () => {
+  const { 
+    toggleFolderModal, 
+    toggleUploadModal, 
+    folders,
+    tags,
+    selectedFolder,
+    setSelectedFolder,
+    setSearchQuery
+  } = useDocumentStore();
+  
+  // Function to render folders recursively
+  const renderFolders = (parentId: string | null, indent = 0) => {
+    const filteredFolders = folders.filter(folder => folder.parentId === parentId);
+    
+    return filteredFolders.map(folder => (
+      <React.Fragment key={folder.id}>
+        <SidebarItem
+          icon={<Folder size={16} />}
+          label={folder.name}
+          active={selectedFolder === folder.id}
+          onClick={() => setSelectedFolder(folder.id)}
+          indent={indent}
+        />
+        {renderFolders(folder.id, indent + 1)}
+      </React.Fragment>
+    ));
+  };
+  
+  const handleAllDocuments = () => {
+    setSelectedFolder(null);
+    setSearchQuery('');
+  };
+  
+  return (
+    <div className="w-60 h-screen border-r flex flex-col bg-background">
+      <div className="p-4">
+        <h2 className="text-lg font-semibold mb-4">DocuPrism</h2>
+        
+        <div className="space-y-1 mb-4">
+          <Button 
+            variant="default" 
+            className="w-full justify-start"
+            onClick={() => toggleUploadModal(true)}
+          >
+            <Plus size={16} className="mr-2" />
+            Upload Document
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full justify-start mt-2"
+            onClick={() => toggleFolderModal(true)}
+          >
+            <Folder size={16} className="mr-2" />
+            New Folder
+          </Button>
+        </div>
+      </div>
+      
+      <ScrollArea className="flex-1">
+        <div className="p-2 space-y-1">
+          <SidebarItem
+            icon={<File size={16} />}
+            label="All Documents"
+            active={selectedFolder === null && !document.location.hash.includes('search')}
+            onClick={handleAllDocuments}
+          />
+        
+          <div className="mt-4 mb-2 px-3">
+            <h3 className="text-xs font-medium text-muted-foreground">FOLDERS</h3>
+          </div>
+          
+          {renderFolders(null)}
+          
+          <div className="mt-4 mb-2 px-3">
+            <h3 className="text-xs font-medium text-muted-foreground">TAGS</h3>
+          </div>
+          
+          {tags.map(tag => (
+            <SidebarItem
+              key={tag.id}
+              icon={<Tag size={16} />}
+              label={tag.name}
+              color={tag.color}
+              onClick={() => {
+                setSearchQuery(`tag:${tag.name}`);
+              }}
+            />
+          ))}
+        </div>
+      </ScrollArea>
+      
+      <div className="p-4 border-t">
+        <SidebarItem
+          icon={<Settings size={16} />}
+          label="Settings"
+          onClick={() => {}}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;

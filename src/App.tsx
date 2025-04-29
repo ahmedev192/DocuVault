@@ -1,25 +1,29 @@
-import React from 'react';
-import { Layout } from './components/layout/Layout';
-import { DocumentGrid } from './components/documents/DocumentGrid';
-import { DocumentViewer } from './components/documents/DocumentViewer';
-import { AppProvider, useAppContext } from './context/AppContext';
 
-function AppContent() {
-  const { activeDocument } = useAppContext();
-  
-  return (
-    <Layout>
-      {activeDocument ? <DocumentViewer /> : <DocumentGrid />}
-    </Layout>
-  );
-}
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import "./utils/pdfjs-worker";
 
-function App() {
-  return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
-  );
-}
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider delayDuration={0}>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

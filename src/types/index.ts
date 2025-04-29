@@ -1,107 +1,73 @@
-// Document types
+
 export interface Document {
   id: string;
-  title: string;
-  description: string;
-  fileUrl: string;
-  fileType: FileType;
-  fileSize: number;
-  folderId: string;
-  tags: Tag[];
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  thumbnailUrl?: string;
+  content?: string; // For searchable content
   createdAt: Date;
   updatedAt: Date;
-  createdBy: string;
+  tags: string[];
+  folderId: string | null;
+  ownerId: string;
+  accessList: AccessControl[];
   versions: DocumentVersion[];
-  currentVersion: number;
-  totalPages: number;
-  access: Record<string, AccessLevel>;
+  annotations: Annotation[];
 }
 
 export interface DocumentVersion {
+  id: string;
+  documentId: string;
   versionNumber: number;
-  fileUrl: string;
+  url: string;
   createdAt: Date;
   createdBy: string;
-  changeNotes: string;
+  size: number;
 }
 
-export enum FileType {
-  PDF = 'pdf',
-  DOCX = 'docx',
-  XLSX = 'xlsx',
-  PPTX = 'pptx',
-  JPG = 'jpg',
-  PNG = 'png',
-  TXT = 'txt',
+export interface Annotation {
+  id: string;
+  documentId: string;
+  type: 'highlight' | 'comment' | 'note';
+  content: string;
+  position?: {
+    page: number;
+    x: number;
+    y: number;
+    width?: number;
+    height?: number;
+  };
+  createdBy: string;
+  createdAt: Date;
 }
 
-// Folder types
 export interface Folder {
   id: string;
   name: string;
   parentId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  ownerId: string;
 }
 
-// Tag types
 export interface Tag {
   id: string;
   name: string;
   color: string;
 }
 
-// User & Permission types
+export interface AccessControl {
+  userId: string;
+  userName: string;
+  permissionLevel: 'view' | 'edit' | 'download' | 'admin';
+}
+
 export interface User {
   id: string;
   name: string;
-  email: string;
-  role: Role;
+  avatar?: string;
 }
 
-export enum Role {
-  ADMIN = 'admin',
-  EDITOR = 'editor',
-  VIEWER = 'viewer',
-}
-
-export enum AccessLevel {
-  VIEW = 'view',
-  EDIT = 'edit',
-  DOWNLOAD = 'download',
-  NONE = 'none',
-}
-
-// Annotation types
-export interface Annotation {
-  id: string;
-  documentId: string;
-  pageNumber: number;
-  type: AnnotationType;
-  content: string;
-  position: {
-    x: number;
-    y: number;
-  };
-  createdBy: string;
-  createdAt: Date;
-}
-
-export enum AnnotationType {
-  HIGHLIGHT = 'highlight',
-  COMMENT = 'comment',
-  DRAWING = 'drawing',
-}
-
-// Search types
-export interface SearchResult {
-  documentId: string;
-  matches: SearchMatch[];
-}
-
-export interface SearchMatch {
-  text: string;
-  pageNumber: number;
-  position: {
-    x: number;
-    y: number;
-  };
-}
+export type ViewMode = 'grid' | 'list';
